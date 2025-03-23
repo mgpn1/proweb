@@ -261,6 +261,31 @@
         </div>
     </section>
 
+    <!-- Shopping Cart Section -->
+    <section class="cart-section">
+        <div class="container">
+            <h2>Order Your Website</h2>
+            <div class="cart-container">
+                <div class="cart-item">
+                    <div class="item-details">
+                        <h3>Order Website</h3>
+                        <p>Professional website development service</p>
+                    </div>
+                    <div class="item-price">₹123</div>
+                    <button class="add-to-cart-btn" onclick="addToCart()">Add to Cart</button>
+                </div>
+                <div class="cart-summary">
+                    <h3>Cart Summary</h3>
+                    <div class="cart-total">
+                        <span>Total:</span>
+                        <span id="cart-amount">₹0</span>
+                    </div>
+                    <button class="checkout-btn" onclick="checkout()">Proceed to Checkout</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer>
         <div class="container">
@@ -284,5 +309,47 @@
             </div>
         </div>
     </footer>
+
+    <!-- Razorpay Script -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        let cartAmount = 0;
+        
+        function addToCart() {
+            cartAmount = 123;
+            document.getElementById('cart-amount').textContent = `₹${cartAmount}`;
+        }
+
+        function checkout() {
+            if (cartAmount === 0) {
+                alert('Please add an item to cart first');
+                return;
+            }
+
+            const options = {
+                key: "rzp_live_wI83zuqOK98LSD", // Replace with your Razorpay Key ID
+                amount: cartAmount * 100, // Amount in paise
+                currency: "INR",
+                name: "Pro Web Makers",
+                description: "Website Development Service",
+                handler: function (response) {
+                    alert('Payment successful! Payment ID: ' + response.razorpay_payment_id);
+                    cartAmount = 0;
+                    document.getElementById('cart-amount').textContent = `₹${cartAmount}`;
+                },
+                prefill: {
+                    name: "Customer Name",
+                    email: "customer@example.com",
+                    contact: "9999999999"
+                },
+                theme: {
+                    color: "#5828ff"
+                }
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+        }
+    </script>
 </body>
 </html> 

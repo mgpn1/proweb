@@ -266,19 +266,44 @@
         <div class="container">
             <h2>Order Your Website</h2>
             <div class="cart-container">
-                <div class="cart-item">
-                    <div class="item-details">
-                        <h3>Order Website</h3>
-                        <p>Professional website development service</p>
+                <div class="cart-items">
+                    <div class="cart-item">
+                        <div class="item-details">
+                            <h3>Demo Static Website</h3>
+                            <p>Basic static website with modern design</p>
+                        </div>
+                        <div class="item-price">₹27</div>
+                        <button class="add-to-cart-btn" onclick="addToCart(27, 'Demo Static Website')">Add to Cart</button>
                     </div>
-                    <div class="item-price">₹123</div>
-                    <button class="add-to-cart-btn" onclick="addToCart()">Add to Cart</button>
+                    <div class="cart-item">
+                        <div class="item-details">
+                            <h3>Demo Dynamic Website</h3>
+                            <p>Interactive website with dynamic content</p>
+                        </div>
+                        <div class="item-price">₹28</div>
+                        <button class="add-to-cart-btn" onclick="addToCart(28, 'Demo Dynamic Website')">Add to Cart</button>
+                    </div>
+                    <div class="cart-item">
+                        <div class="item-details">
+                            <h3>Demo E-commerce Website</h3>
+                            <p>Full-featured online store demo</p>
+                        </div>
+                        <div class="item-price">₹29</div>
+                        <button class="add-to-cart-btn" onclick="addToCart(29, 'Demo E-commerce Website')">Add to Cart</button>
+                    </div>
                 </div>
                 <div class="cart-summary">
                     <h3>Cart Summary</h3>
+                    <div class="cart-items-list">
+                    </div>
                     <div class="cart-total">
-                        <span>Total:</span>
+                        <span>Total Amount:</span>
                         <span id="cart-amount">₹0</span>
+                    </div>
+                    <div class="customer-info">
+                        <input type="text" id="business-name" placeholder="Business Name" required>
+                        <textarea id="business-address" placeholder="Business Address" required></textarea>
+                        <input type="tel" id="customer-phone" placeholder="Phone Number" required>
                     </div>
                     <button class="checkout-btn" onclick="checkout()">Proceed to Checkout</button>
                 </div>
@@ -313,34 +338,141 @@
     <!-- Razorpay Script -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
-        let cartAmount = 0;
+        let cartItems = [];
+        const MAX_QUANTITY = 3;
         
-        function addToCart() {
-            cartAmount = 123;
-            document.getElementById('cart-amount').textContent = `₹${cartAmount}`;
+        function addToCart(price, item) {
+            const existingItem = cartItems.find(i => i.name === item);
+            
+            if (existingItem) {
+                if (existingItem.quantity < MAX_QUANTITY) {
+                    existingItem.quantity++;
+                    existingItem.total = existingItem.quantity * existingItem.price;
+                } else {
+                    alert(`Maximum ${MAX_QUANTITY} instances allowed per item`);
+                    return;
+                }
+            } else {
+                cartItems.push({
+                    name: item,
+                    price: price,
+                    quantity: 1,
+                    total: price
+                });
+            }
+            
+            updateCartDisplay();
+        }
+
+        function removeFromCart(index) {
+            if (cartItems[index].quantity > 1) {
+                cartItems[index].quantity--;
+                cartItems[index].total = cartItems[index].quantity * cartItems[index].price;
+            } else {
+                cartItems.splice(index, 1);
+            }
+            updateCartDisplay();
+        }
+
+        function updateCartDisplay() {
+            const cartSummary = document.querySelector('.cart-summary');
+            let cartHTML = `
+                <h3>Cart Summary</h3>
+                <div class="cart-items-list">
+            `;
+
+            let totalAmount = 0;
+
+            cartItems.forEach((item, index) => {
+                totalAmount += item.total;
+                cartHTML += `
+                    <div class="cart-item-summary">
+                        <div class="item-info">
+                            <h4>${item.name}</h4>
+                            <p>₹${item.price} × ${item.quantity}</p>
+                            <p>Total: ₹${item.total}</p>
+                        </div>
+                        <div class="item-actions">
+                            <button onclick="removeFromCart(${index})" class="remove-btn">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            cartHTML += `
+                </div>
+                <div class="cart-total">
+                    <span>Total Amount:</span>
+                    <span id="cart-amount">₹${totalAmount}</span>
+                </div>
+                <div class="customer-info">
+                    <input type="text" id="business-name" placeholder="Business Name" required>
+                    <textarea id="business-address" placeholder="Business Address" required></textarea>
+                    <input type="tel" id="customer-phone" placeholder="Phone Number" required>
+                </div>
+                <button class="checkout-btn" onclick="checkout()">Proceed to Checkout</button>
+            `;
+
+            cartSummary.innerHTML = cartHTML;
+        }
+
+        function validateForm() {
+            const businessName = document.getElementById('business-name').value;
+            const businessAddress = document.getElementById('business-address').value;
+            const customerPhone = document.getElementById('customer-phone').value;
+
+            if (!businessName || !businessAddress || !customerPhone) {
+                alert('Please fill in all required fields');
+                return false;
+            }
+            return true;
         }
 
         function checkout() {
-            if (cartAmount === 0) {
-                alert('Please add an item to cart first');
+            if (cartItems.length === 0) {
+                alert('Please add items to cart first');
                 return;
             }
 
+            if (!validateForm()) {
+                return;
+            }
+
+            const businessName = document.getElementById('business-name').value;
+            const businessAddress = document.getElementById('business-address').value;
+            const customerPhone = document.getElementById('customer-phone').value;
+
+            const totalAmount = cartItems.reduce((sum, item) => sum + item.total, 0);
+            const itemsDescription = cartItems.map(item => 
+                `${item.name} (${item.quantity})`
+            ).join(', ');
+
             const options = {
-                key: "rzp_live_wI83zuqOK98LSD", // Replace with your Razorpay Key ID
-                amount: cartAmount * 100, // Amount in paise
+                key: "rzp_live_wI83zuqOK98LSD",
+                amount: totalAmount * 100,
                 currency: "INR",
                 name: "Pro Web Makers",
-                description: "Website Development Service",
+                description: itemsDescription,
                 handler: function (response) {
                     alert('Payment successful! Payment ID: ' + response.razorpay_payment_id);
-                    cartAmount = 0;
-                    document.getElementById('cart-amount').textContent = `₹${cartAmount}`;
+                    cartItems = [];
+                    updateCartDisplay();
+                    document.getElementById('business-name').value = '';
+                    document.getElementById('business-address').value = '';
+                    document.getElementById('customer-phone').value = '';
                 },
                 prefill: {
-                    name: "Customer Name",
-                    email: "customer@example.com",
-                    contact: "9999999999"
+                    name: businessName,
+                    contact: customerPhone,
+                    email: "customer@example.com"
+                },
+                notes: {
+                    businessName: businessName,
+                    businessAddress: businessAddress,
+                    customerPhone: customerPhone,
+                    itemsOrdered: itemsDescription
                 },
                 theme: {
                     color: "#5828ff"
